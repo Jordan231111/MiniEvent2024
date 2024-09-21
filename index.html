@@ -9,45 +9,64 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
-    <style>
-        /* Set map height */
-        #map {
-            height: 400px;
-            width: 100%;
-        }
-    </style>
 </head>
 
 <body class="Main" id="Main">
 
-    <h1 class="WhiteText"> Report a Pot Hole
-        <img src="https://www.roadtrafficsigns.com/img/lg/K/pothole-slow-down-sign-k-0757.png" alt="Image" height="50"
-            width="35">
-    </h1>
+    <div id="Title">
+        <h1 id="Title_Text" class="WhiteText"> Report a Pot Hole <img src="https://www.roadtrafficsigns.com/img/lg/K/pothole-slow-down-sign-k-0757.png" alt="Image" height="50" width="35"> </h1>
+    </div>
 
     <div>
         <div>
-            <p class="WhiteText"> <b> Current Potholes in the world: </b> </p>
+            <p id="SubTitle_Text" class="WhiteText"> <b> Current Potholes in the world: </b> </p>
 
             <ol class="WhiteText">
-                <li id="LightBlue">
-                    34 Pine Ave. Sylvania, OH 43560
+                
+                <li id="LightBlue"> 34 Pine Ave. Sylvania, OH 43560
                     <button onclick="showOnMap(41.6929765, -83.8129724)">View on Map</button>
                 </li>
 
-                <li>7763 Buckingham Lane Collegeville, PA 19426
+                <li> 7763 Buckingham Lane Collegeville, PA 19426
                     <button onclick="showOnMap(40.1622996, -75.4634399)">View on Map</button>
                 </li>
 
-                <li>129 Cactus Court Onalaska, WI 54650
+                <li> 129 Cactus Court Onalaska, WI 54650
                     <button onclick="showOnMap(43.8833282, -91.2359932)">View on Map</button>
                 </li>
+
             </ol>
         </div>
     </div>
 
     <!-- Map container -->
     <div id="map"></div>
+
+
+    <!-- Form -->
+    <div class="container">
+        <h1 id="Title_Text" class="WhiteText"> Report: </h1>
+
+      <form action="/action_page.php">
+
+        <div>
+          <label class="WhiteText" for="name">Name: </label>
+        </div>
+        <div>
+          <input class="Margin" id="InputBox" type="text" name="name" placeholder="Your name...">
+        </div>
+
+        <div>
+          <label class="WhiteText" for="add"> Address: </label>
+        </div>
+        <div>
+          <input class="Margin" id="InputBox" type="text" name="add" placeholder="Your address...">
+        </div>
+
+        <input class="Margin" id="SubmitBox" type="submit" value="Submit">
+
+      </form>
+    </div>
 
     <!-- JavaScript to initialize the map and handle marker placement -->
     <script>
@@ -74,3 +93,4 @@
 </body>
 
 </html>
+
