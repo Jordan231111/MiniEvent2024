@@ -14,3 +14,65 @@ html {
 #LightBlue {
 	color: #619eff;
 }
+
+#Title {
+	background-color: #00173d;
+	position: flex;
+	height: 100%;
+	width: 100%;
+	padding: 2px;
+	text-align: center;
+	align-items: center;
+	justify-content: center;
+
+}
+
+img {
+	margin: -10px 0px;
+}
+
+#SubTitle_Text {
+	font-size: 20px;
+}
+
+#Title_Text {
+	position: flex;
+}
+
+.Margin {
+	margin-bottom: 10px;
+}
+
+.container {
+	border-radius: 5px;
+	background-color: #00173d;
+	margin: 10px;
+	padding: 20px;
+}
+
+#InputBox {
+	height: 50%;
+	width: 50%;
+	padding: 10px;
+	font-size: 15px;
+}
+
+#SubmitBox {
+	height: 100%;
+	width: 5%;
+	padding: 10px;
+	font-size: 15px;
+
+	background-color: #04AA6D;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+#map {
+	border-radius: 4px;
+	height: 400px;
+	width: 100%;
+}
+
