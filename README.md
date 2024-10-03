@@ -6,10 +6,10 @@ MiniEvent2024 is a web-based application designed to allow users to report potho
 
 ## Features
 
-- 🗺️ Interactive map to view reported potholes
-- 📝 Form to submit new pothole reports
-- 📋 List view of current pothole reports
-- 📱 Responsive design for various device sizes
+- 🗺️ **Interactive Map:** View and navigate reported potholes on an interactive map.
+- 📝 **Report Form:** Easily submit new pothole reports with your name and address.
+- 📋 **List View:** Browse a list of current pothole reports.
+- 📱 **Responsive Design:** Accessible on various device sizes, including mobile phones and tablets.
 
 ## Technologies Used
 
@@ -20,13 +20,13 @@ MiniEvent2024 is a web-based application designed to allow users to report potho
 
 ## Getting Started
 
-### For Users
+### For **Users**
 
 1. Open the application in your web browser (link to be provided).
 2. Explore the map to see reported potholes.
 3. Use the form to report a new pothole.
 
-### For Developers
+### For **Developers**
 
 #### Prerequisites
 
