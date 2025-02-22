@@ -27,9 +27,11 @@ MiniEvent2024 is a web-based application designed to allow users to report potho
 
 ### For **Users**
 
-1. Open the application in your web browser (link to be provided).
+1. Open the application in your web browser using one of the following links:
+   - [Enhanced Version](https://mini-event2024.vercel.app/optimized.html)
+   - [Base Version](https://mini-event2024.vercel.app/index.html)
 2. Explore the map to see reported potholes.
-3. Use the form to report a new pothole.
+3. Use the form to report a new pothole. (optimized html only)
 
 ### For **Developers & Learners**
 
