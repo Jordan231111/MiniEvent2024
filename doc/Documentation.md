@@ -338,7 +338,3 @@ By following this guide, developers can:
 
 Happy learning and coding!
 ```
-
----
-
-These two documents should provide everything you need: a fully detailed README.md for your repository and an extensive, in-depth Documentation.md covering every aspect of the enhancements.
