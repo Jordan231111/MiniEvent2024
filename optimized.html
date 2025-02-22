@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>Report a Pot Hole</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <!-- Leaflet CSS and JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <style>
-      /* Basic styles for the suggestions dropdown */
+      body {
+        font-family: Arial, sans-serif;
+        background: #333;
+        color: #fff;
+      }
+      .WhiteText { color: #fff; }
+      .Margin { margin: 5px 0; }
       #autocomplete-suggestions {
         border: 1px solid #ccc;
         background: #fff;
@@ -24,10 +31,16 @@
       .suggestion-item:hover {
         background: #f0f0f0;
       }
+      .container {
+        padding: 20px;
+      }
+      #map {
+        margin: 10px 0;
+      }
     </style>
   </head>
-  <body class="Main" id="Main">
-    <div id="Title">
+  <body id="Main">
+    <div id="Title" class="container">
       <h1 id="Title_Text" class="WhiteText">
         Report a Pot Hole
         <img src="https://www.roadtrafficsigns.com/img/lg/K/pothole-slow-down-sign-k-0757.png"
@@ -36,19 +49,19 @@
              width="35">
       </h1>
     </div>
-    <div>
-      <div>
-        <p id="SubTitle_Text" class="WhiteText"><b>Current Potholes in the world:</b></p>
-        <!-- Dynamic list loaded from Firestore -->
-        <ol id="potholeList" class="WhiteText"></ol>
-      </div>
+
+    <div class="container">
+      <p id="SubTitle_Text" class="WhiteText"><b>Current Potholes in the world:</b></p>
+      <!-- Dynamic list loaded from Firestore -->
+      <ol id="potholeList" class="WhiteText"></ol>
     </div>
+
     <!-- Map container -->
     <div id="map" style="height: 400px;"></div>
+
     <!-- Report Form -->
     <div class="container" style="position: relative;">
       <h1 id="Title_Text" class="WhiteText">Report:</h1>
-      <!-- Note: No action attribute -->
       <form id="reportForm">
         <div>
           <label class="WhiteText" for="name">Name:</label>
@@ -72,7 +85,7 @@
         </div>
       </form>
     </div>
-    
+
     <!-- Firebase and Application Logic using ES Modules -->
     <script type="module">
       // Import Firebase modules from version 11.3.1
@@ -102,7 +115,7 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       
-      // Function to show a pothole on the map (same as your original)
+      // Function to show a pothole on the map
       function showOnMap(lat, lng) {
         map.setView([lat, lng], 15);
         L.marker([lat, lng]).addTo(map)
@@ -120,11 +133,12 @@
           listElement.innerHTML = ""; // Clear current list
           querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // Create a list item similar to your original format
+            // Create a list item similar to the original format
             const li = document.createElement("li");
             li.textContent = data.address;
             const button = document.createElement("button");
             button.textContent = "View on Map";
+            button.style.marginLeft = "10px";
             button.onclick = () => { showOnMap(data.lat, data.lng); };
             li.appendChild(button);
             listElement.appendChild(li);
@@ -164,7 +178,7 @@
       const addressInput = document.getElementById("addressInput");
       const suggestionsContainer = document.getElementById("autocomplete-suggestions");
       let debounceTimeout;
-
+      
       addressInput.addEventListener("input", () => {
         clearTimeout(debounceTimeout);
         const query = addressInput.value.trim();
@@ -182,6 +196,7 @@
               item.classList.add("suggestion-item");
               item.textContent = result.display_name;
               item.addEventListener("click", () => {
+                // Set the address input and capture lat/lng silently
                 addressInput.value = result.display_name;
                 document.getElementById("latInput").value = parseFloat(result.lat).toFixed(6);
                 document.getElementById("lngInput").value = parseFloat(result.lon).toFixed(6);
