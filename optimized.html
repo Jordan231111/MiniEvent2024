@@ -21,7 +21,7 @@
     </div>
     <!-- Map container -->
     <div id="map"></div>
-    <!-- Report Form -->
+    <!-- Report Form (Note: No action attribute is used) -->
     <div class="container">
       <h1 id="Title_Text" class="WhiteText">Report:</h1>
       <form id="reportForm">
@@ -60,7 +60,7 @@
       import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-analytics.js";
       import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
       
-      // Your Firebase configuration (obtained from your Firebase Console under Project Settings -> Your Apps)
+      // Your Firebase configuration (replace with your actual config values from the Firebase Console)
       const firebaseConfig = {
         apiKey: "AIzaSyDJxdKWAIkY3BFiHa9eIxzvzGrRwDQAo-U",
         authDomain: "minievent2025.firebaseapp.com",
@@ -123,7 +123,7 @@
       
       // Handle form submission to add a new pothole report
       document.getElementById("reportForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
+        event.preventDefault(); // Prevent default form submission behavior
         const name = document.getElementById("nameInput").value;
         const address = document.getElementById("addressInput").value;
         const lat = parseFloat(document.getElementById("latInput").value);
