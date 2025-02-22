@@ -81,7 +81,7 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       
-      // Function to show a pothole on the map
+      // Function to show a pothole's location on the map, using your original marker icon and popup
       function showOnMap(lat, lng) {
         map.setView([lat, lng], 15);
         L.marker([lat, lng]).addTo(map)
@@ -173,11 +173,12 @@
               item.classList.add("suggestion-item");
               item.textContent = result.display_name;
               item.addEventListener("click", () => {
-                // Set the address input and capture lat/lng silently
+                // Set the address input, capture lat/lng, center the map, and drop a marker
                 addressInput.value = result.display_name;
                 selectedLat = parseFloat(result.lat).toFixed(6);
                 selectedLng = parseFloat(result.lon).toFixed(6);
                 suggestionsContainer.innerHTML = "";
+                showOnMap(selectedLat, selectedLng);
               });
               suggestionsContainer.appendChild(item);
             });
@@ -197,6 +198,8 @@
             addressInput.value = data.display_name;
             selectedLat = parseFloat(lat).toFixed(6);
             selectedLng = parseFloat(lng).toFixed(6);
+            // Center the map and drop a marker just like in your original code
+            showOnMap(selectedLat, selectedLng);
           }
         } catch (error) {
           console.error("Reverse geocoding error:", error);
