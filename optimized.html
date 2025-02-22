@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Report a Pot Hole</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <!-- Leaflet CSS and JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <!-- Firebase Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+</head>
+<body class="Main" id="Main">
+  <div id="Title">
+    <h1 id="Title_Text" class="WhiteText">
+      Report a Pot Hole
+      <img src="https://www.roadtrafficsigns.com/img/lg/K/pothole-slow-down-sign-k-0757.png" alt="Pothole sign" height="50" width="35">
+    </h1>
+  </div>
+
+  <div>
+    <p id="SubTitle_Text" class="WhiteText"><b>Current Potholes in the world:</b></p>
+    <ol id="potholeList" class="WhiteText"></ol>
+  </div>
+
+  <!-- Map container -->
+  <div id="map"></div>
+
+  <!-- Report Form -->
+  <div class="container">
+    <h1 id="Title_Text" class="WhiteText">Report:</h1>
+    <form id="reportForm">
+      <div>
+        <label class="WhiteText" for="name">Name:</label>
+      </div>
+      <div>
+        <input class="Margin" id="nameInput" type="text" name="name" placeholder="Your name..." required>
+      </div>
+      <div>
+        <label class="WhiteText" for="address">Address:</label>
+      </div>
+      <div>
+        <input class="Margin" id="addressInput" type="text" name="address" placeholder="Your address..." required>
+      </div>
+      <div>
+        <label class="WhiteText" for="lat">Latitude:</label>
+      </div>
+      <div>
+        <input class="Margin" id="latInput" type="number" step="any" name="lat" placeholder="Latitude" required>
+      </div>
+      <div>
+        <label class="WhiteText" for="lng">Longitude:</label>
+      </div>
+      <div>
+        <input class="Margin" id="lngInput" type="number" step="any" name="lng" placeholder="Longitude" required>
+      </div>
+      <input class="Margin" id="SubmitBox" type="submit" value="Submit">
+    </form>
+  </div>
+
+  <!-- JavaScript to initialize Firebase, map, and handle reports -->
+  <script>
+    // 1. Firebase configuration (Replace with your actual config values)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // 2. Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 3. Initialize the map centered on a default location
+    var map = L.map('map').setView([41.6929765, -83.8129724], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Function to show a pothole location on the map
+    function showOnMap(lat, lng) {
+      map.setView([lat, lng], 15);
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup('Pothole Location')
+        .openPopup();
+    }
+
+    // Load pothole reports from Firestore and update the list and map
+    function loadPotholes() {
+      db.collection("potholes").orderBy("timestamp", "desc").get()
+        .then((querySnapshot) => {
+          const listElement = document.getElementById("potholeList");
+          listElement.innerHTML = ""; // Clear existing list
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            // Create list item for each report
+            const li = document.createElement("li");
+            li.textContent = data.address;
+            // Button to view on map
+            const button = document.createElement("button");
+            button.textContent = "View on Map";
+            button.onclick = function() { showOnMap(data.lat, data.lng); };
+            li.appendChild(button);
+            listElement.appendChild(li);
+            // Add marker to the map
+            L.marker([data.lat, data.lng]).addTo(map)
+              .bindPopup(`<b>${data.name}</b><br>${data.address}`);
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching documents: ", error);
+        });
+    }
+
+    // Initial load of potholes
+    loadPotholes();
+
+    // Handle form submission to add a new pothole report
+    document.getElementById("reportForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const name = document.getElementById("nameInput").value;
+      const address = document.getElementById("addressInput").value;
+      const lat = parseFloat(document.getElementById("latInput").value);
+      const lng = parseFloat(document.getElementById("lngInput").value);
+
+      // Add report to Firestore with a server timestamp
+      db.collection("potholes").add({
+        name: name,
+        address: address,
+        lat: lat,
+        lng: lng,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        alert("Report submitted successfully!");
+        document.getElementById("reportForm").reset();
+        loadPotholes();  // Reload reports to include the new one
+      })
+      .catch((error) => {
+        console.error("Error adding document: ", error);
+      });
+    });
+  </script>
+</body>
+</html>
