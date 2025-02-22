@@ -77,9 +77,6 @@
           <!-- Container for autocomplete suggestions -->
           <div id="autocomplete-suggestions"></div>
         </div>
-        <!-- Hidden fields for latitude and longitude -->
-        <input type="hidden" id="latInput" name="lat">
-        <input type="hidden" id="lngInput" name="lng">
         <div>
           <input class="Margin" id="SubmitBox" type="submit" value="Submit">
         </div>
@@ -151,23 +148,34 @@
       // Initial load of reports
       loadPotholes();
       
+      // Variables to store selected coordinates (instead of hidden inputs)
+      let selectedLat = null;
+      let selectedLng = null;
+      
       // Handle form submission to add a new report via Firebase
       document.getElementById("reportForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         const name = document.getElementById("nameInput").value;
         const address = document.getElementById("addressInput").value;
-        const lat = parseFloat(document.getElementById("latInput").value);
-        const lng = parseFloat(document.getElementById("lngInput").value);
+        
+        if (selectedLat === null || selectedLng === null) {
+          alert("Please select a valid address from the suggestions.");
+          return;
+        }
+        
         try {
           await addDoc(collection(db, "potholes"), {
             name: name,
             address: address,
-            lat: lat,
-            lng: lng,
+            lat: selectedLat,
+            lng: selectedLng,
             timestamp: serverTimestamp()
           });
           alert("Report submitted successfully!");
           document.getElementById("reportForm").reset();
+          // Reset the stored coordinates
+          selectedLat = null;
+          selectedLng = null;
           loadPotholes();
         } catch (error) {
           console.error("Error adding report:", error);
@@ -198,8 +206,8 @@
               item.addEventListener("click", () => {
                 // Set the address input and capture lat/lng silently
                 addressInput.value = result.display_name;
-                document.getElementById("latInput").value = parseFloat(result.lat).toFixed(6);
-                document.getElementById("lngInput").value = parseFloat(result.lon).toFixed(6);
+                selectedLat = parseFloat(result.lat).toFixed(6);
+                selectedLng = parseFloat(result.lon).toFixed(6);
                 suggestionsContainer.innerHTML = "";
               });
               suggestionsContainer.appendChild(item);
