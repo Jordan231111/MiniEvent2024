@@ -58,8 +58,9 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
       import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-analytics.js";
       import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
-      
-      // Your Firebase configuration (replace with your actual config values)
+
+      // Firebase configuration (replace with your actual config values)
+      // Note: For production, use environment variables or a secure config file
       const firebaseConfig = {
         apiKey: "AIzaSyDJxdKWAIkY3BFiHa9eIxzvzGrRwDQAo-U",
         authDomain: "minievent2025.firebaseapp.com",
@@ -69,28 +70,40 @@
         appId: "1:733627669272:web:90c09a9595b6f936561c6d",
         measurementId: "G-HP9ZS5LRQV"
       };
-      
+
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const analytics = getAnalytics(app);
       const db = getFirestore(app);
-      
+
       // Initialize the map with Leaflet
+      // Set initial view to a hardcoded location (could be dynamic for production)
       const map = L.map('map').setView([41.6929765, -83.8129724], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
-      
-      // Function to show a pothole's location on the map, using your original marker icon and popup
+
+      // Variable to keep track of the current marker on the map
+      // Ensures only one marker is shown at a time
+      let currentMarker = null;
+
+      // Function to show a pothole location on the map
+      // Removes existing marker (if any) and adds a new one
       function showOnMap(lat, lng) {
-        map.setView([lat, lng], 15);
-        L.marker([lat, lng]).addTo(map)
+        // Remove existing marker if it exists
+        if (currentMarker) {
+          map.removeLayer(currentMarker);
+        }
+        // Add new marker and center the map on it
+        currentMarker = L.marker([lat, lng]).addTo(map)
           .bindPopup('Pothole Location')
           .openPopup();
+        map.setView([lat, lng], 15);
       }
-      
-      // Function to load pothole reports from Firestore and display them
+
+      // Function to load pothole reports from Firestore and display in the list
       async function loadPotholes() {
+        // Reference to the potholes collection, ordered by timestamp descending
         const potholesRef = collection(db, "potholes");
         const q = query(potholesRef, orderBy("timestamp", "desc"));
         try {
@@ -99,7 +112,7 @@
           listElement.innerHTML = ""; // Clear current list
           querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // Create a list item similar to the original format
+            // Create list item with address and "View on Map" button
             const li = document.createElement("li");
             li.textContent = data.address;
             const button = document.createElement("button");
@@ -111,28 +124,31 @@
           });
         } catch (error) {
           console.error("Error loading potholes:", error);
+          // Note: Could alert user for better feedback (e.g., "Failed to load reports. Please try again.")
         }
       }
-      
-      // Initial load of reports
+
+      // Load existing pothole reports when the page loads
       loadPotholes();
-      
-      // Variables to store selected coordinates (instead of hidden inputs)
+
+      // Variables to store selected coordinates for reporting
       let selectedLat = null;
       let selectedLng = null;
-      
-      // Handle form submission to add a new report via Firebase
+
+      // Handle form submission to add a new pothole report
       document.getElementById("reportForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         const name = document.getElementById("nameInput").value;
         const address = document.getElementById("addressInput").value;
-        
+
+        // Ensure a location has been selected
         if (selectedLat === null || selectedLng === null) {
           alert("Please select a valid address from the suggestions or click on the map.");
           return;
         }
-        
+
         try {
+          // Add report to Firestore with coordinates as numbers
           await addDoc(collection(db, "potholes"), {
             name: name,
             address: address,
@@ -141,42 +157,48 @@
             timestamp: serverTimestamp()
           });
           alert("Report submitted successfully!");
+          // Reset the form and clear selected coordinates
           document.getElementById("reportForm").reset();
-          // Reset the stored coordinates
           selectedLat = null;
           selectedLng = null;
+          // Reload the list to include the new report
           loadPotholes();
         } catch (error) {
           console.error("Error adding report:", error);
+          // Note: Could alert user for better feedback (e.g., "Failed to submit report. Please try again.")
         }
       });
-      
-      // ----- Simple Autocomplete using Nominatim -----
+
+      // ----- Autocomplete for Address Input using Nominatim -----
       const addressInput = document.getElementById("addressInput");
       const suggestionsContainer = document.getElementById("autocomplete-suggestions");
       let debounceTimeout;
-      
+
       addressInput.addEventListener("input", () => {
+        // Clear any existing debounce timeout
         clearTimeout(debounceTimeout);
         const query = addressInput.value.trim();
+        // Clear suggestions if query is empty
         if (!query) {
           suggestionsContainer.innerHTML = "";
           return;
         }
+        // Debounce request by 300ms to avoid excessive API calls
         debounceTimeout = setTimeout(async () => {
           try {
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}`);
             const results = await response.json();
             suggestionsContainer.innerHTML = "";
+            // Show up to 5 suggestions
             results.slice(0, 5).forEach(result => {
               const item = document.createElement("div");
               item.classList.add("suggestion-item");
               item.textContent = result.display_name;
               item.addEventListener("click", () => {
-                // Set the address input, capture lat/lng, center the map, and drop a marker
                 addressInput.value = result.display_name;
-                selectedLat = parseFloat(result.lat).toFixed(6);
-                selectedLng = parseFloat(result.lon).toFixed(6);
+                // Store coordinates as numbers
+                selectedLat = parseFloat(result.lat);
+                selectedLng = parseFloat(result.lon);
                 suggestionsContainer.innerHTML = "";
                 showOnMap(selectedLat, selectedLng);
               });
@@ -184,11 +206,12 @@
             });
           } catch (error) {
             console.error("Autocomplete error:", error);
+            // Note: Could alert user for better feedback (e.g., "Failed to fetch suggestions. Please try again.")
           }
-        }, 300); // Debounce by 300ms
+        }, 300);
       });
-      
-      // ----- Map Click Reverse Geocoding -----
+
+      // ----- Reverse Geocoding on Map Click -----
       map.on('click', async (e) => {
         const { lat, lng } = e.latlng;
         try {
@@ -196,13 +219,14 @@
           const data = await response.json();
           if (data && data.display_name) {
             addressInput.value = data.display_name;
-            selectedLat = parseFloat(lat).toFixed(6);
-            selectedLng = parseFloat(lng).toFixed(6);
-            // Center the map and drop a marker just like in your original code
-            showOnMap(selectedLat, selectedLng);
+            // Store coordinates as numbers
+            selectedLat = lat;
+            selectedLng = lng;
+            showOnMap(lat, lng);
           }
         } catch (error) {
           console.error("Reverse geocoding error:", error);
+          // Note: Could alert user for better feedback (e.g., "Failed to determine location. Please try again.")
         }
       });
     </script>
