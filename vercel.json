@@ -1,8 +1,5 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/optimized.html"
-    }
+  "redirects": [
+    { "source": "/me", "destination": "/optimized.html", "permanent": true }
   ]
 }
