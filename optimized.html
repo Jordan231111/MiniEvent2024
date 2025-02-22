@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Report A Pot Hole</title>
+    <title>Report a Pot Hole</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <!-- Leaflet CSS and JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
@@ -10,18 +10,19 @@
   <body class="Main" id="Main">
     <div id="Title">
       <h1 id="Title_Text" class="WhiteText">
-        Report A Pot Hole
+        Report a Pot Hole
         <img src="https://www.roadtrafficsigns.com/img/lg/K/pothole-slow-down-sign-k-0757.png"
              alt="Pothole sign" height="50" width="35">
       </h1>
     </div>
     <div>
       <p id="SubTitle_Text" class="WhiteText"><b>Current Potholes in the world:</b></p>
+      <!-- This list will be populated from Firestore -->
       <ol id="potholeList" class="WhiteText"></ol>
     </div>
     <!-- Map container -->
-    <div id="map"></div>
-    <!-- Report Form (Note: No action attribute is used) -->
+    <div id="map" style="height: 400px;"></div>
+    <!-- Report Form (handled entirely in JavaScript) -->
     <div class="container">
       <h1 id="Title_Text" class="WhiteText">Report:</h1>
       <form id="reportForm">
@@ -60,7 +61,7 @@
       import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-analytics.js";
       import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
       
-      // Your Firebase configuration (replace with your actual config values from the Firebase Console)
+      // Your Firebase configuration (replace with your actual config values from Firebase Console)
       const firebaseConfig = {
         apiKey: "AIzaSyDJxdKWAIkY3BFiHa9eIxzvzGrRwDQAo-U",
         authDomain: "minievent2025.firebaseapp.com",
@@ -82,7 +83,24 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       
-      // Function to show a pothole on the map
+      // When the user clicks on the map, auto-fill the lat, lng, and address fields
+      map.on('click', async (e) => {
+        const { lat, lng } = e.latlng;
+        document.getElementById("latInput").value = lat.toFixed(6);
+        document.getElementById("lngInput").value = lng.toFixed(6);
+        // Use Nominatim for reverse geocoding
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+          const data = await response.json();
+          if (data && data.display_name) {
+            document.getElementById("addressInput").value = data.display_name;
+          }
+        } catch (error) {
+          console.error("Reverse geocoding error: ", error);
+        }
+      });
+      
+      // Function to show a pothole on the map (unchanged logic)
       function showOnMap(lat, lng) {
         map.setView([lat, lng], 15);
         L.marker([lat, lng]).addTo(map)
@@ -90,14 +108,14 @@
           .openPopup();
       }
       
-      // Function to load pothole reports from Firestore and update the UI
+      // Function to load pothole reports from Firestore and update the UI dynamically
       async function loadPotholes() {
         const potholesRef = collection(db, "potholes");
         const q = query(potholesRef, orderBy("timestamp", "desc"));
         try {
           const querySnapshot = await getDocs(q);
           const listElement = document.getElementById("potholeList");
-          listElement.innerHTML = ""; // Clear existing list
+          listElement.innerHTML = ""; // Clear the current list
           querySnapshot.forEach((doc) => {
             const data = doc.data();
             // Create a list item for each report
@@ -121,7 +139,7 @@
       // Initial load of reports
       loadPotholes();
       
-      // Handle form submission to add a new pothole report
+      // Handle form submission to add a new pothole report via Firebase
       document.getElementById("reportForm").addEventListener("submit", async (event) => {
         event.preventDefault(); // Prevent default form submission behavior
         const name = document.getElementById("nameInput").value;
@@ -138,7 +156,7 @@
           });
           alert("Report submitted successfully!");
           document.getElementById("reportForm").reset();
-          loadPotholes(); // Reload reports to include the new one
+          loadPotholes(); // Reload reports to include the new submission
         } catch (error) {
           console.error("Error adding report: ", error);
         }
