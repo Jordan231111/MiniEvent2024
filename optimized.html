@@ -6,25 +6,49 @@
     <!-- Leaflet CSS and JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+      /* Basic styles for the suggestions dropdown */
+      #autocomplete-suggestions {
+        border: 1px solid #ccc;
+        background: #fff;
+        position: absolute;
+        z-index: 1000;
+        max-height: 150px;
+        overflow-y: auto;
+        width: calc(100% - 22px);
+      }
+      .suggestion-item {
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .suggestion-item:hover {
+        background: #f0f0f0;
+      }
+    </style>
   </head>
   <body class="Main" id="Main">
     <div id="Title">
       <h1 id="Title_Text" class="WhiteText">
         Report a Pot Hole
         <img src="https://www.roadtrafficsigns.com/img/lg/K/pothole-slow-down-sign-k-0757.png"
-             alt="Pothole sign" height="50" width="35">
+             alt="Pothole sign"
+             height="50"
+             width="35">
       </h1>
     </div>
     <div>
-      <p id="SubTitle_Text" class="WhiteText"><b>Current Potholes in the world:</b></p>
-      <!-- This list will be populated from Firestore -->
-      <ol id="potholeList" class="WhiteText"></ol>
+      <div>
+        <p id="SubTitle_Text" class="WhiteText"><b>Current Potholes in the world:</b></p>
+        <!-- Dynamic list loaded from Firestore -->
+        <ol id="potholeList" class="WhiteText"></ol>
+      </div>
     </div>
     <!-- Map container -->
     <div id="map" style="height: 400px;"></div>
-    <!-- Report Form (handled entirely in JavaScript) -->
-    <div class="container">
+    <!-- Report Form -->
+    <div class="container" style="position: relative;">
       <h1 id="Title_Text" class="WhiteText">Report:</h1>
+      <!-- Note: No action attribute -->
       <form id="reportForm">
         <div>
           <label class="WhiteText" for="name">Name:</label>
@@ -35,22 +59,17 @@
         <div>
           <label class="WhiteText" for="address">Address:</label>
         </div>
-        <div>
-          <input class="Margin" id="addressInput" type="text" name="address" placeholder="Your address..." required>
+        <div style="position: relative;">
+          <input class="Margin" id="addressInput" type="text" name="address" placeholder="Your address..." required autocomplete="off">
+          <!-- Container for autocomplete suggestions -->
+          <div id="autocomplete-suggestions"></div>
         </div>
+        <!-- Hidden fields for latitude and longitude -->
+        <input type="hidden" id="latInput" name="lat">
+        <input type="hidden" id="lngInput" name="lng">
         <div>
-          <label class="WhiteText" for="lat">Latitude:</label>
+          <input class="Margin" id="SubmitBox" type="submit" value="Submit">
         </div>
-        <div>
-          <input class="Margin" id="latInput" type="number" step="any" name="lat" placeholder="Latitude" required>
-        </div>
-        <div>
-          <label class="WhiteText" for="lng">Longitude:</label>
-        </div>
-        <div>
-          <input class="Margin" id="lngInput" type="number" step="any" name="lng" placeholder="Longitude" required>
-        </div>
-        <input class="Margin" id="SubmitBox" type="submit" value="Submit">
       </form>
     </div>
     
@@ -61,7 +80,7 @@
       import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-analytics.js";
       import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
       
-      // Your Firebase configuration (replace with your actual config values from Firebase Console)
+      // Your Firebase configuration (replace with your actual config values)
       const firebaseConfig = {
         apiKey: "AIzaSyDJxdKWAIkY3BFiHa9eIxzvzGrRwDQAo-U",
         authDomain: "minievent2025.firebaseapp.com",
@@ -83,24 +102,7 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       
-      // When the user clicks on the map, auto-fill the lat, lng, and address fields
-      map.on('click', async (e) => {
-        const { lat, lng } = e.latlng;
-        document.getElementById("latInput").value = lat.toFixed(6);
-        document.getElementById("lngInput").value = lng.toFixed(6);
-        // Use Nominatim for reverse geocoding
-        try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
-          const data = await response.json();
-          if (data && data.display_name) {
-            document.getElementById("addressInput").value = data.display_name;
-          }
-        } catch (error) {
-          console.error("Reverse geocoding error: ", error);
-        }
-      });
-      
-      // Function to show a pothole on the map (unchanged logic)
+      // Function to show a pothole on the map (same as your original)
       function showOnMap(lat, lng) {
         map.setView([lat, lng], 15);
         L.marker([lat, lng]).addTo(map)
@@ -108,40 +110,36 @@
           .openPopup();
       }
       
-      // Function to load pothole reports from Firestore and update the UI dynamically
+      // Function to load pothole reports from Firestore and display them
       async function loadPotholes() {
         const potholesRef = collection(db, "potholes");
         const q = query(potholesRef, orderBy("timestamp", "desc"));
         try {
           const querySnapshot = await getDocs(q);
           const listElement = document.getElementById("potholeList");
-          listElement.innerHTML = ""; // Clear the current list
+          listElement.innerHTML = ""; // Clear current list
           querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // Create a list item for each report
+            // Create a list item similar to your original format
             const li = document.createElement("li");
             li.textContent = data.address;
-            // Create a button to view the location on the map
             const button = document.createElement("button");
             button.textContent = "View on Map";
             button.onclick = () => { showOnMap(data.lat, data.lng); };
             li.appendChild(button);
             listElement.appendChild(li);
-            // Add a marker to the map for the report
-            L.marker([data.lat, data.lng]).addTo(map)
-              .bindPopup(`<b>${data.name}</b><br>${data.address}`);
           });
         } catch (error) {
-          console.error("Error loading potholes: ", error);
+          console.error("Error loading potholes:", error);
         }
       }
       
       // Initial load of reports
       loadPotholes();
       
-      // Handle form submission to add a new pothole report via Firebase
+      // Handle form submission to add a new report via Firebase
       document.getElementById("reportForm").addEventListener("submit", async (event) => {
-        event.preventDefault(); // Prevent default form submission behavior
+        event.preventDefault();
         const name = document.getElementById("nameInput").value;
         const address = document.getElementById("addressInput").value;
         const lat = parseFloat(document.getElementById("latInput").value);
@@ -156,10 +154,45 @@
           });
           alert("Report submitted successfully!");
           document.getElementById("reportForm").reset();
-          loadPotholes(); // Reload reports to include the new submission
+          loadPotholes();
         } catch (error) {
-          console.error("Error adding report: ", error);
+          console.error("Error adding report:", error);
         }
+      });
+      
+      // ----- Simple Autocomplete using Nominatim -----
+      const addressInput = document.getElementById("addressInput");
+      const suggestionsContainer = document.getElementById("autocomplete-suggestions");
+      let debounceTimeout;
+
+      addressInput.addEventListener("input", () => {
+        clearTimeout(debounceTimeout);
+        const query = addressInput.value.trim();
+        if (!query) {
+          suggestionsContainer.innerHTML = "";
+          return;
+        }
+        debounceTimeout = setTimeout(async () => {
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}`);
+            const results = await response.json();
+            suggestionsContainer.innerHTML = "";
+            results.slice(0, 5).forEach(result => {
+              const item = document.createElement("div");
+              item.classList.add("suggestion-item");
+              item.textContent = result.display_name;
+              item.addEventListener("click", () => {
+                addressInput.value = result.display_name;
+                document.getElementById("latInput").value = parseFloat(result.lat).toFixed(6);
+                document.getElementById("lngInput").value = parseFloat(result.lon).toFixed(6);
+                suggestionsContainer.innerHTML = "";
+              });
+              suggestionsContainer.appendChild(item);
+            });
+          } catch (error) {
+            console.error("Autocomplete error:", error);
+          }
+        }, 300); // Debounce by 300ms
       });
     </script>
   </body>
